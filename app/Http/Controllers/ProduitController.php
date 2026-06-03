@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Produit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProduitController extends Controller
 {
@@ -81,21 +82,37 @@ class ProduitController extends Controller
             'description' => 'nullable|string',
             'prix' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
     
-        $produit->update([
-            'nom' => $request->nom,
-            'description' => $request->description,
-            'prix' => $request->prix,
-            'stock' => $request->stock,
-        ]);
+        $produit->nom = $request->nom;
+        $produit->description = $request->description;
+        $produit->prix = $request->prix;
+        $produit->stock = $request->stock;
+    
+        if ($request->hasFile('image')) {
+    
+            // supprimer ancienne image
+            if ($produit->image && Storage::disk('public')->exists($produit->image)) {
+                Storage::disk('public')->delete($produit->image);
+            }
+    
+            $file = $request->file('image');
+            $filename = time() . '_' . $file->getClientOriginalName();
+    
+            $path = $file->storeAs('produits', $filename, 'public');
+    
+            $produit->image = $path;
+        }
+    
+        $produit->save();
     
         return response()->json([
             'message' => 'Produit mis à jour avec succès',
             'data' => $produit
         ]);
     }
-
+    
     /**
      * Remove the specified resource from storage.
      */
