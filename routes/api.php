@@ -16,3 +16,22 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy']);
 
 Route::apiResource('produits', ProduitController::class);
 
+Route::middleware(['auth:sanctum'])->group(function () {
+    
+    // Utilisateur connecté
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
+    
+    Route::get('/produits', [ProduitController::class, 'index']);
+    Route::get('/produits/{id}', [ProduitController::class, 'show']);
+    // Gestion des produits (protégé)
+    Route::middleware(['admin'])->group(function () {
+            // Logout
+        Route::post('/logout', [AuthenticatedSessionController::class, 'destroy']);
+
+        Route::post('/produits', [ProduitController::class, 'store']);
+        Route::put('/produits/{id}', [ProduitController::class, 'update']);
+        Route::delete('/produits/{id}', [ProduitController::class, 'destroy']);
+    });    
+});

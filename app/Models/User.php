@@ -48,4 +48,16 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    // Vérifier si l'utilisateur est admin
+    public function isAdmin()
+    {
+        return $this->role === 'admin';
+    }
+
+    // Vérifier si l'utilisateur est user
+    public function isUser()
+    {
+        return $this->role === 'user';
+    }
 }
