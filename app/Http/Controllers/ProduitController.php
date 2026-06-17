@@ -32,6 +32,7 @@ class ProduitController extends Controller
         $request->validate([
             'nom' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'saveur' => 'required|string|max:255',
             'prix' => 'required|numeric',
             'stock' => 'required|integer',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp'
@@ -47,6 +48,7 @@ class ProduitController extends Controller
         $produit = Produit::create([
             'nom' => $request->nom,
             'description' => $request->description,
+            'saveur' => $request->saveur,
             'prix' => $request->prix,
             'stock' => $request->stock,
             'image' => $path
@@ -80,6 +82,7 @@ class ProduitController extends Controller
         $request->validate([
             'nom' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'saveur' => 'required|string|max:255',
             'prix' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
@@ -87,6 +90,7 @@ class ProduitController extends Controller
     
         $produit->nom = $request->nom;
         $produit->description = $request->description;
+        $produit->saveur = $request->saveur;
         $produit->prix = $request->prix;
         $produit->stock = $request->stock;
     
