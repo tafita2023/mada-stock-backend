@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\File;
 
 class ProfileController extends Controller
 {
@@ -39,14 +40,25 @@ class ProfileController extends Controller
         // Avatar
         if ($request->hasFile('avatar')) {
 
-            if ($user->avatar &&
-                Storage::disk('public')->exists($user->avatar)) {
-                Storage::disk('public')->delete($user->avatar);
-            }
-
-            $user->avatar = $request->file('avatar')
-                ->store('avatars', 'public');
+        // supprimer ancien avatar
+        if ($user->avatar && File::exists(public_path($user->avatar))) {
+            File::delete(public_path($user->avatar));
         }
+
+        $file = $request->file('avatar');
+
+        $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+
+        $destination = public_path('uploads/avatars');
+
+        if (!File::exists($destination)) {
+            File::makeDirectory($destination, 0755, true);
+        }
+
+        $file->move($destination, $filename);
+
+        $user->avatar = 'uploads/avatars/' . $filename;        
+    }
 
         // Mot de passe
         if ($request->filled('password')) {

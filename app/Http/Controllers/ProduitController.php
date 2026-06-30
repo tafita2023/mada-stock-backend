@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Produit;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 
 class ProduitController extends Controller
 {
@@ -42,7 +42,11 @@ class ProduitController extends Controller
         
         if ($request -> hasFile('image')){
             $file = $request->file('image');
-            $path = $file->store('produits', 'public');
+            $filename = time().'_'.$file->getClientOriginalName();
+
+            $file->move(public_path('uploads/produits'), $filename);
+    
+            $path = 'uploads/produits/'.$filename;
         }
 
         $produit = Produit::create([
@@ -96,18 +100,26 @@ class ProduitController extends Controller
     
         if ($request->hasFile('image')) {
     
-            // supprimer ancienne image
-            if ($produit->image && Storage::disk('public')->exists($produit->image)) {
-                Storage::disk('public')->delete($produit->image);
-            }
-    
-            $file = $request->file('image');
-            $filename = time() . '_' . $file->getClientOriginalName();
-    
-            $path = $file->storeAs('produits', $filename, 'public');
-    
-            $produit->image = $path;
+// Supprimer l'ancienne image
+if ($produit->image && File::exists(public_path($produit->image))) {
+    File::delete(public_path($produit->image));
+}
+
+// Enregistrer la nouvelle image
+$file = $request->file('image');
+$filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+
+// Crée automatiquement le dossier s'il n'existe pas
+$destination = public_path('uploads/produits');
+
+        if (!File::exists($destination)) {
+            File::makeDirectory($destination, 0755, true);
         }
+
+        $file->move($destination, $filename);
+
+        $produit->image = 'uploads/produits/' . $filename;        
+    }
     
         $produit->save();
     
@@ -122,6 +134,10 @@ class ProduitController extends Controller
      */
     public function destroy(Produit $produit)
     {
+        if ($produit->image && File::exists(public_path($produit->image))) {
+            File::delete(public_path($produit->image));
+        }
+
         $produit->delete();
 
     return response()->json([

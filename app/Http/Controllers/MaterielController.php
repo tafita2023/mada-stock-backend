@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Materiel;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
+
 class MaterielController extends Controller
 {
     /**
@@ -41,7 +43,11 @@ class MaterielController extends Controller
         
         if ($request -> hasFile('image')){
             $file = $request->file('image');
-            $path = $file->store('Materiels', 'public');
+            $filename = time().'_'.$file->getClientOriginalName();
+
+            $file->move(public_path('uploads/materiels'), $filename);
+    
+            $path = 'uploads/materiels/'.$filename;
         }
 
         $materiel = Materiel::create([
@@ -95,18 +101,26 @@ class MaterielController extends Controller
     
         if ($request->hasFile('image')) {
     
-            // supprimer ancienne image
-            if ($materiel->image && Storage::disk('public')->exists($materiel->image)) {
-                Storage::disk('public')->delete($materiel->image);
-            }
-    
-            $file = $request->file('image');
-            $filename = time() . '_' . $file->getClientOriginalName();
-    
-            $path = $file->storeAs('Materiels', $filename, 'public');
-    
-            $materiel->image = $path;
+        // Supprimer l'ancienne image
+        if ($materiel->image && File::exists(public_path($materiel->image))) {
+            File::delete(public_path($materiel->image));
         }
+
+        // Enregistrer la nouvelle image
+        $file = $request->file('image');
+        $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+
+        // Crée automatiquement le dossier s'il n'existe pas
+        $destination = public_path('uploads/materiels');
+
+        if (!File::exists($destination)) {
+            File::makeDirectory($destination, 0755, true);
+        }
+
+        $file->move($destination, $filename);
+
+        $materiel->image = 'uploads/materiels/' . $filename;        
+    }
     
         $materiel->save();
     
