@@ -30,12 +30,15 @@ class ProduitController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nom' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'saveur' => 'required|string|max:255',
-            'prix' => 'required|numeric',
-            'stock' => 'required|integer',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp'
+            'marque'        => 'required|string|max:255',
+            'nom'           => 'required|string|max:255',
+            'description'   => 'nullable|string',
+            'saveur'        => 'required|string|max:255',
+            'contenance'    => 'required|integer',
+            'nicotine'      => 'nullable|integer',
+            'prix'          => 'required|numeric',
+            'stock'         => 'required|integer',
+            'image'         => 'nullable|image|mimes:jpg,jpeg,png,webp'
         ]);
 
         $path = null;
@@ -50,12 +53,15 @@ class ProduitController extends Controller
         }
 
         $produit = Produit::create([
-            'nom' => $request->nom,
-            'description' => $request->description,
-            'saveur' => $request->saveur,
-            'prix' => $request->prix,
-            'stock' => $request->stock,
-            'image' => $path
+            'marque'        => $request->input('marque'),
+            'nom'           => $request->input('nom'),
+            'description'   => $request->input('description'),
+            'saveur'        => $request->input('saveur'),
+            'contenance'    => $request->input('contenance'),
+            'nicotine'      => $request->input('nicotine', 0),
+            'prix'          => $request->input('prix'),
+            'stock'         => $request->input('stock'),
+            'image'         => $path
         ]);
     
         return response()->json($produit, 201);
@@ -84,14 +90,18 @@ class ProduitController extends Controller
     public function update(Request $request, Produit $produit)
     {
         $request->validate([
-            'nom' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'saveur' => 'required|string|max:255',
-            'prix' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'marque'        => 'required|string|max:255',
+            'nom'           => 'required|string|max:255',
+            'description'   => 'nullable|string',
+            'saveur'        => 'required|string|max:255',
+            'contenance'    => 'required|integer',
+            'nicotine'      => 'nullable|integer',
+            'prix'          => 'required|numeric',
+            'stock'         => 'required|integer',
+            'image'         => 'nullable|image|mimes:jpg,jpeg,png,webp'
         ]);
     
+        $produit->marque = $request->marque;
         $produit->nom = $request->nom;
         $produit->description = $request->description;
         $produit->saveur = $request->saveur;
@@ -100,17 +110,17 @@ class ProduitController extends Controller
     
         if ($request->hasFile('image')) {
     
-// Supprimer l'ancienne image
-if ($produit->image && File::exists(public_path($produit->image))) {
-    File::delete(public_path($produit->image));
-}
+        // Supprimer l'ancienne image
+        if ($produit->image && File::exists(public_path($produit->image))) {
+            File::delete(public_path($produit->image));
+        }
 
-// Enregistrer la nouvelle image
-$file = $request->file('image');
-$filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+        // Enregistrer la nouvelle image
+        $file = $request->file('image');
+        $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
 
-// Crée automatiquement le dossier s'il n'existe pas
-$destination = public_path('uploads/produits');
+        // Crée automatiquement le dossier s'il n'existe pas
+        $destination = public_path('uploads/produits');
 
         if (!File::exists($destination)) {
             File::makeDirectory($destination, 0755, true);

@@ -17,6 +17,8 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->decimal('prix', 10, 2);
             $table->string('saveur');
+            $table->integer('contenance');
+            $table->integer('nicotine')->default(0);
             $table->integer('stock')->default(0);
             $table->string('image')->nullable();
             $table->timestamps();

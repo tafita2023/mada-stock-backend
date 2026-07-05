@@ -10,8 +10,13 @@ class Materiel extends Model
     'nom',
     'type',
     'marque',
+    'modele',
+    'batterie',
+    'capacite',
+    'watts',
     'prix',
     'stock',
+    'description',
     'image'
     ];
 }

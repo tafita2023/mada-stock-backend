@@ -31,12 +31,17 @@ class MaterielController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nom' => 'required|string|max:255',
-            'type' => 'required|string|max:255',
-            'marque' => 'required|string|max:255',
-            'prix' => 'required|numeric',
-            'stock' => 'required|integer',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp'
+            'nom'           => 'required|string|max:255',
+            'type'          => 'required|string|max:255',
+            'marque'        => 'required|string|max:255',
+            'modele'        => 'required|string|max:255',
+            'batterie'      => 'required|numeric',
+            'capacite'      => 'required|numeric',
+            'watts'         => 'required|numeric',
+            'prix'          => 'required|numeric',
+            'stock'         => 'required|integer',
+            'description'   => 'nullable|string',
+            'image'         => 'nullable|image|mimes:jpg,jpeg,png,webp'
         ]);
 
         $path = null;
@@ -51,12 +56,17 @@ class MaterielController extends Controller
         }
 
         $materiel = Materiel::create([
-            'nom' => $request->nom,
-            'type' => $request->type,
-            'marque' => $request->marque,
-            'prix' => $request->prix,
-            'stock' => $request->stock,
-            'image' => $path
+            'nom'           => $request->input('nom'),
+            'type'          => $request->input('type'),
+            'marque'        => $request->input('marque'),
+            'modele'        => $request->input('modele'),
+            'batterie'      => $request->input('batterie'),
+            'capacite'      => $request->input('capacite'),
+            'watts'         => $request->input('watts'),
+            'prix'          => $request->input('prix'),
+            'stock'         => $request->input('stock'),
+            'description'   => $request->input('description'),
+            'image'         => $path
         ]);
     
         return response()->json($materiel, 201);
@@ -85,17 +95,27 @@ class MaterielController extends Controller
     public function update(Request $request, Materiel $materiel)
     {
         $request->validate([
-            'nom' => 'required|string|max:255',
-            'type' => 'required|string|max:255',
-            'marque' => 'required|string|max:255',
-            'prix' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'nom'           => 'required|string|max:255',
+            'type'          => 'required|string|max:255',
+            'marque'        => 'required|string|max:255',
+            'modele'        => 'required|string|max:255',
+            'batterie'      => 'required|numeric',
+            'capacite'      => 'required|numeric',
+            'watts'         => 'required|numeric',
+            'prix'          => 'required|numeric',
+            'stock'         => 'required|integer',
+            'description'   => 'nullable|string',
+            'image'         => 'nullable|image|mimes:jpg,jpeg,png,webp'
         ]);
     
         $materiel->nom = $request->nom;
         $materiel->type = $request->type;
         $materiel->marque = $request->marque;
+        $materiel->modele = $request->modele;
+        $materiel->batterie = $request->batterie;
+        $materiel->capacite = $request->capacite;
+        $materiel->watts = $request->watts;
+        $materiel->description = $request->description;
         $materiel->prix = $request->prix;
         $materiel->stock = $request->stock;
     
