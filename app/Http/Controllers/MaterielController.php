@@ -14,7 +14,7 @@ class MaterielController extends Controller
      */
     public function index()
     {
-        return Materiel::latest()->paginate(10);
+        return Materiel::latest()->get();
     }
 
     /**
@@ -32,7 +32,7 @@ class MaterielController extends Controller
     {
         $request->validate([
             'nom'           => 'required|string|max:255',
-            'type'          => 'required|string|max:255',
+            'type'          => 'required|integer',
             'marque'        => 'required|string|max:255',
             'modele'        => 'required|string|max:255',
             'batterie'      => 'required|numeric',
@@ -96,7 +96,7 @@ class MaterielController extends Controller
     {
         $request->validate([
             'nom'           => 'required|string|max:255',
-            'type'          => 'required|string|max:255',
+            'type'          => 'required|integer',
             'marque'        => 'required|string|max:255',
             'modele'        => 'required|string|max:255',
             'batterie'      => 'required|numeric',
@@ -155,6 +155,10 @@ class MaterielController extends Controller
      */
     public function destroy(Materiel $materiel)
     {
+        if ($materiel->image && File::exists(public_path($materiel->image))) {
+            File::delete(public_path($materiel->image));
+        }
+
         $materiel->delete();
 
     return response()->json([

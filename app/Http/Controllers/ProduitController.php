@@ -13,7 +13,7 @@ class ProduitController extends Controller
      */
     public function index()
     {
-        return Produit::latest()->paginate(10);
+        return Produit::latest()->get();
     }
 
     /**
@@ -33,7 +33,7 @@ class ProduitController extends Controller
             'marque'        => 'required|string|max:255',
             'nom'           => 'required|string|max:255',
             'description'   => 'nullable|string',
-            'saveur'        => 'required|string|max:255',
+            'saveur'        => 'required|integer',
             'contenance'    => 'required|integer',
             'nicotine'      => 'nullable|integer',
             'prix'          => 'required|numeric',
@@ -93,7 +93,7 @@ class ProduitController extends Controller
             'marque'        => 'required|string|max:255',
             'nom'           => 'required|string|max:255',
             'description'   => 'nullable|string',
-            'saveur'        => 'required|string|max:255',
+            'saveur'        => 'required|integer',
             'contenance'    => 'required|integer',
             'nicotine'      => 'nullable|integer',
             'prix'          => 'required|numeric',
@@ -105,6 +105,8 @@ class ProduitController extends Controller
         $produit->nom = $request->nom;
         $produit->description = $request->description;
         $produit->saveur = $request->saveur;
+        $produit->contenance = $request->contenance;
+        $produit->nicotine = $request->nicotine;
         $produit->prix = $request->prix;
         $produit->stock = $request->stock;
     
