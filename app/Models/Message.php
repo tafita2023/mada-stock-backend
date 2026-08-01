@@ -10,6 +10,7 @@ class Message extends Model
         'nom',
         'email',
         'message',
+        'status'
     ];
 
 }

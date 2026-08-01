@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Message;
+use Illuminate\Support\Facades\Http;
 
 class MessageController extends Controller
 {
@@ -24,16 +25,65 @@ class MessageController extends Controller
             'nom'           => 'required|string|max:255',
             'email'         => 'required|string|max:255',
             'message'       => 'required|string|max:255',
+            'captcha'       => 'required|string',
         ]);
+
+        // Vérification captcha Google
+        $captchaResponse = Http::asForm()->post(
+            'https://www.google.com/recaptcha/api/siteverify',
+            [
+                'secret'   => env('RECAPTCHA_SECRET_KEY'),
+                'response' => $request->captcha,
+            ]
+        );
+
+
+        $captchaResult = $captchaResponse->json();
+
+
+        if (
+            !isset($captchaResult['success']) ||
+            $captchaResult['success'] !== true
+        ) {
+
+            return response()->json([
+                'message' => 'Captcha invalide'
+            ], 422);
+
+        }
 
         $message = Message::create([
             'nom'           => $request->input('nom'),
             'email'         => $request->input('email'),
             'message'       => $request->input('message'),
+            'status'        => 1,
         ]);
     
         return response()->json($message, 201);
     
     }
 
+    public function markAsRead(int $id)
+    {
+        $message = Message::findOrFail($id);
+
+        $message->update([
+            'status' => 0
+        ]);
+
+        return response()->json([
+            'message' => 'Message marqué comme lu'
+        ]);
+    }
+
+    public function destroy(Message $message)
+    {
+
+    $message->delete();
+
+    return response()->json([
+        'message' => 'Message supprimé avec succès'
+    ]);
+    }
+ 
 }

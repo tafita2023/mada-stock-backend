@@ -11,6 +11,9 @@ use App\Http\Controllers\Diy\PacksController;
 use App\Http\Controllers\Diy\DiversController;
 use App\Http\Controllers\MaterielController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\MessageController;
+
+Route::post('/message', [MessageController::class, 'store']);
 
 Route::post('/register', [RegisteredUserController::class, 'store']);
 Route::post('/login', [AuthenticatedSessionController::class, 'store']);
@@ -45,6 +48,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
             // Logout
         Route::post('/logout', [AuthenticatedSessionController::class, 'destroy']);
     
+        // ROUTE MESSAGE
+        Route::put('/messages/{id}/read', [MessageController::class, 'markAsRead']);
+        Route::get('/messages', [MessageController::class, 'index']);
+        Route::delete('/messages/{message}', [MessageController::class, 'destroy']);
+
         // Route produit
         Route::post('/produits', [ProduitController::class, 'store']);
         Route::put('/produits/{produit}', [ProduitController::class, 'update']);
