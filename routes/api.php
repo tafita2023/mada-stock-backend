@@ -12,6 +12,7 @@ use App\Http\Controllers\Diy\DiversController;
 use App\Http\Controllers\MaterielController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\NicotineController;
 
 Route::post('/message', [MessageController::class, 'store']);
 
@@ -19,22 +20,18 @@ Route::post('/register', [RegisteredUserController::class, 'store']);
 Route::post('/login', [AuthenticatedSessionController::class, 'store']);
 
 Route::get('/produits', [ProduitController::class, 'index']);
-Route::get('/produits/{produit}', [ProduitController::class, 'show']);
 
 Route::get('/materiels', [MaterielController::class, 'index']);
-Route::get('/materiels/{materiel}', [MaterielController::class, 'show']);
 
 Route::get('/diy/bases', [BasesController::class, 'index']);
-Route::get('/diy/bases/{base}', [BasesController::class, 'show']);
 
 Route::get('/diy/aromes', [AromesController::class, 'index']);
-Route::get('/diy/aromes/{arome}', [AromesController::class, 'show']);
 
 Route::get('/diy/packs', [PacksController::class, 'index']);
-Route::get('/diy/packs/{pack}', [PacksController::class, 'show']);
 
 Route::get('/diy/divers', [DiversController::class, 'index']);
-Route::get('/diy/divers/{diver}', [DiversController::class, 'show']);
+
+Route::get('/nicotines', [NicotineController::class, 'index']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
     
@@ -82,6 +79,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/diy/divers', [DiversController::class, 'store']);
         Route::put('/diy/divers/{diver}', [DiversController::class, 'update']);
         Route::delete('/diy/divers/{diver}', [DiversController::class, 'destroy']);
+
+        // Route nicotine
+        Route::post('/nicotines', [NicotineController::class, 'store']);
+        Route::put('/nicotines/{nicotine}', [NicotineController::class, 'update']);
+        Route::delete('/nicotines/{nicotine}', [NicotineController::class, 'destroy']);
 
         // Route profil
         Route::get('/profile', [ProfileController::class, 'me']);

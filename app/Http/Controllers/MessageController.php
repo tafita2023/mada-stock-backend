@@ -24,6 +24,7 @@ class MessageController extends Controller
         $request->validate([
             'nom'           => 'required|string|max:255',
             'email'         => 'required|string|max:255',
+            'telephone'     => 'required|string|max:10',
             'message'       => 'required|string|max:255',
             'captcha'       => 'required|string',
         ]);
@@ -55,6 +56,7 @@ class MessageController extends Controller
         $message = Message::create([
             'nom'           => $request->input('nom'),
             'email'         => $request->input('email'),
+            'telephone'     => $request->input('telephone'),
             'message'       => $request->input('message'),
             'status'        => 1,
         ]);
