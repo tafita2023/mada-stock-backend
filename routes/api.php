@@ -13,11 +13,16 @@ use App\Http\Controllers\MaterielController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NicotineController;
+use App\Http\Controllers\PromotionController;
 
 Route::post('/message', [MessageController::class, 'store']);
 
 Route::post('/register', [RegisteredUserController::class, 'store']);
 Route::post('/login', [AuthenticatedSessionController::class, 'store']);
+
+Route::get('/promotions', [PromotionController::class, 'index']);
+Route::get('/promotions/produits', [PromotionController::class, 'produits']);
+Route::get('/promotions/materiels', [PromotionController::class, 'materiels']);
 
 Route::get('/produits', [ProduitController::class, 'index']);
 
@@ -79,6 +84,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/diy/divers', [DiversController::class, 'store']);
         Route::put('/diy/divers/{diver}', [DiversController::class, 'update']);
         Route::delete('/diy/divers/{diver}', [DiversController::class, 'destroy']);
+
+        //Route promotion
+        Route::post('/promotions', [PromotionController::class, 'store']);
+        Route::put('/promotions/{promotion}', [PromotionController::class, 'update']);
+        Route::delete('/promotions/{type}/{promotion}', [PromotionController::class, 'destroy']);
 
         // Route nicotine
         Route::post('/nicotines', [NicotineController::class, 'store']);
