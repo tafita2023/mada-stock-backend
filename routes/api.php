@@ -14,6 +14,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NicotineController;
 use App\Http\Controllers\PromotionController;
+use App\Http\Controllers\PayementController;
 
 Route::post('/message', [MessageController::class, 'store']);
 
@@ -37,6 +38,10 @@ Route::get('/diy/packs', [PacksController::class, 'index']);
 Route::get('/diy/divers', [DiversController::class, 'index']);
 
 Route::get('/nicotines', [NicotineController::class, 'index']);
+
+Route::post('/payments/create', [PayementController::class, 'createPayment']);
+
+Route::post('/payments/notification', [PayementController::class,'notification']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
     

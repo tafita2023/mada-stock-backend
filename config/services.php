@@ -35,4 +35,16 @@ return [
         ],
     ],
 
+    'papi' => [
+        'api_key' => env('PAPI_API_KEY'),
+        'url' => env('PAPI_URL', 'https://app.papi.mg/engine/api'),
+        'test_mode' => env('PAPI_TEST_MODE', true),
+        'valid_duration' => env('PAPI_VALID_DURATION', 60),
+
+        'success_url' => env('PAPI_SUCCESS_URL'),
+        'failure_url' => env('PAPI_FAILURE_URL'),
+        'notification_url' => env('PAPI_NOTIFICATION_URL'),
+        'webhook_secret' => env('PAPI_WEBHOOK_SECRET'),
+    ],
+
 ];
