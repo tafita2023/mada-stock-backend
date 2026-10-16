@@ -18,157 +18,132 @@ class PayementController extends Controller
         $this->papiService = $papiService;
     }
 
+
     public function createPayment(Request $request)
     {
         $validated = $request->validate([
-            'amount'      => 'required|numeric|min:1',
-            'clientName'  => 'required|string|max:255',
-            'reference'   => 'required|string|max:100',
-            'description' => 'nullable|string',
-            'provider'    => 'nullable|string',
-            'payerEmail'  => 'nullable|email|max:255',
-            'payerPhone'  => 'nullable|string|max:30',
+            'amount'          => 'required|numeric|min:1',
+            'clientName'      => 'required|string|max:255',
+            'reference'       => 'required|string|max:100',
+            'description'     => 'nullable|string',
+            'payerEmail'      => 'nullable|email|max:255',
+            'payerPhone'      => 'nullable|string|max:30',
+            'deliveryType'    => 'nullable|string|max:30',
+            'deliveryAddress' => 'nullable|string',
+            'notes'            => 'nullable|string',
         ]);
     
         try {
-        
+            // Éviter de créer deux commandes avec la même référence.
+            $existingOrder = DB::table('commandes')
+                ->where('reference', $validated['reference'])
+                ->first();
+    
+            if ($existingOrder) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cette référence de commande existe déjà.',
+                ], 409);
+            }
+    
+            // 1. Enregistrer la commande avant de contacter Papi.
+            $orderId = DB::table('commandes')->insertGetId([
+                'reference'        => $validated['reference'],
+                'client_name'      => $validated['clientName'],
+                'client_email'     => $validated['payerEmail'] ?? null,
+                'client_phone'     => $validated['payerPhone'] ?? null,
+                'total'            => $validated['amount'],
+                'payment_method'   => 'PAPI',
+                'status'           => 'EN_ATTENTE_PAIEMENT',
+                'delivery_type'    => $validated['deliveryType'] ?? null,
+                'delivery_address' => $validated['deliveryAddress'] ?? null,
+                'notes'            => $validated['notes']
+                    ?? ($validated['description'] ?? null),
+                'created_at'       => now(),
+                'updated_at'       => now(),
+            ]);
+    
+            // 2. Demander à Papi de créer le lien de paiement.
             $response = $this->papiService->createPaymentLink($validated);
     
             if ($response->failed()) {
-    
-                Log::error('Papi : création du paiement échouée', [
-                    'status' => $response->status(),
-                    'response' => $response->json() ?? $response->body(),
+                Log::error('Papi : création du lien échouée', [
+                    'order_id' => $orderId,
+                    'status'   => $response->status(),
+                    'response' => $response->body(),
                 ]);
     
                 return response()->json([
                     'success' => false,
-                    'message' => 'Impossible de créer le lien de paiement.',
+                    'orderId' => $orderId,
+                    'message' => 'La commande est enregistrée, mais le lien de paiement n’a pas pu être créé.',
                 ], 502);
             }
     
             $result = $response->json();
-        
             $papiData = $result['data'] ?? [];
     
             $paymentLink = $papiData['paymentLink'] ?? null;
+            $notificationToken = $papiData['notificationToken'] ?? null;
     
-            $notificationToken =
-                $papiData['notificationToken'] ?? null;
-    
-            $merchantPaymentReference =
-                $papiData['paymentReference']
-                ?? $validated['reference'];
-    
-            $currency =
-                $papiData['currency']
-                ?? 'MGA';
-        
             if (
                 !is_string($paymentLink) ||
-                !filter_var($paymentLink, FILTER_VALIDATE_URL) ||
-                parse_url($paymentLink, PHP_URL_SCHEME) !== 'https'
+                filter_var($paymentLink, FILTER_VALIDATE_URL) === false ||
+                parse_url($paymentLink, PHP_URL_SCHEME) !== 'https' ||
+                !is_string($notificationToken) ||
+                $notificationToken === ''
             ) {
-    
-                Log::error('Papi : paymentLink absent ou invalide', [
+                Log::error('Papi : réponse de paiement invalide', [
+                    'order_id' => $orderId,
                     'response' => $result,
                 ]);
     
                 return response()->json([
                     'success' => false,
-                    'message' => 'Le lien de paiement retourné est invalide.',
+                    'orderId' => $orderId,
+                    'message' => 'Commande enregistrée, mais la réponse de paiement Papi est invalide.',
                 ], 502);
             }
-        
-            if (
-                !is_string($notificationToken) ||
-                $notificationToken === ''
-            ) {
     
-                Log::error(
-                    'Papi : notificationToken absent',
-                    [
-                        'response' => $result,
-                    ]
-                );
-    
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Le token de notification Papi est absent.',
-                ], 502);
-            }
-        
-            DB::table('payements')->updateOrInsert(
-    
-                [
-                    'merchant_payment_reference' =>
-                        $merchantPaymentReference,
-                ],
-    
-                [
-                    'notification_token' =>
-                        $notificationToken,
-    
-                    'payment_status' =>
-                        'PENDING',
-    
-                    'payment_method' =>
-                        $validated['provider'] ?? null,
-    
-                    'currency' =>
-                        $currency,
-    
-                    'amount' =>
-                        $validated['amount'],
-    
-                    'fee' =>
-                        0,
-    
-                    'client_name' =>
-                        $validated['clientName'],
-    
-                    'payer_email' =>
-                        $validated['payerEmail'] ?? null,
-    
-                    'payer_phone' =>
-                        $validated['payerPhone'] ?? null,
-    
-                    'description' =>
-                        $validated['description'] ?? null,
-    
-                    'payment_link' =>
-                        $paymentLink,
-    
-                    'created_at' =>
-                        now(),
-    
-                    'updated_at' =>
-                        now(),
-                ]
-            );
-        
-            return response()->json([
-                'success' => true,
-    
-                'paymentLink' => $paymentLink,
-    
-                'data' => $papiData,
+            // 3. Enregistrer le paiement avec le bon order_id.
+            DB::table('payements')->insert([
+                'order_id'                   => $orderId,
+                'merchant_payment_reference' => $validated['reference'],
+                'notification_token'         => $notificationToken,
+                'payment_status'             => 'PENDING',
+                'payment_method'              => null,
+                'currency'                    => $papiData['currency'] ?? 'MGA',
+                'amount'                      => $validated['amount'],
+                'fee'                         => 0,
+                'client_name'                 => $validated['clientName'],
+                'payer_email'                 => $validated['payerEmail'] ?? null,
+                'payer_phone'                 => $validated['payerPhone'] ?? null,
+                'description'                 => $validated['description'] ?? null,
+                'payment_link'                => $paymentLink,
+                'created_at'                  => now(),
+                'updated_at'                  => now(),
             ]);
     
-        } catch (Throwable $e) {
+            // 4. Renvoyer le lien à Angular.
+            return response()->json([
+                'success'   => true,
+                'orderId'   => $orderId,
+                'reference' => $validated['reference'],
+                'paymentLink' => $paymentLink,
+                'data'      => $papiData,
+            ], 201);
     
-            Log::error(
-                'Erreur lors de la création du paiement',
-                [
-                    'message' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString(),
-                ]
-            );
+        } catch (\Throwable $e) {
+            Log::error('Erreur lors de la création de la commande ou du paiement', [
+                'message' => $e->getMessage(),
+                'file'    => $e->getFile(),
+                'line'    => $e->getLine(),
+                'trace'   => $e->getTraceAsString(),
+            ]);
     
             return response()->json([
                 'success' => false,
-                'message' =>
-                    'Une erreur est survenue lors de la création du paiement.',
+                'message' => 'Une erreur est survenue lors de la création de la commande ou du paiement.',
             ], 500);
         }
     }
